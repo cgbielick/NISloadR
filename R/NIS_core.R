@@ -6,9 +6,9 @@
 #' Using these, it reads the fixed-width ASCII file into a data.table, renames the columns accordingly,
 #' and writes the data as an fst file for fast reloading.
 #'
-#' @param do_path Character. The path to the Stata .Do file.
-#' @param asc_path Character. The path to the fixed-width ASCII (.ASC) file.
-#' @param output_dir Character. The working directory where the output fst file will be written.
+#' @param do_path Character. The path to the Stata .Do file (including file name).
+#' @param asc_path Character. The path to the fixed-width ASCII (.ASC) file (include file name).
+#' @param output_direct Character. The working directory where the output fst file will be written.
 #'
 #' @return A list with three elements:
 #'   \item{schema}{A data.table containing the variable schema with columns \code{type}, \code{varname}, \code{start}, \code{end}, and \code{width}.}
@@ -19,21 +19,20 @@
 #'
 #' @examples
 #' \dontrun{
-#'   nis <- load_nis_core(
+#'   load_nis_core(
 #'           do_path = "~/project/STATA load programs/StataLoad_NIS_2021_Core.Do",
-#'           asc_path = "/project/data/ASCII/NIS_2021_Core.ASC",
-#'           output_dir = "/project/data")
+#'           asc_path = "~/project/data/ASCII/NIS_2021_Core.ASC",
+#'           output_direct = "~/project/data")
 #' }
 
-
-load_nis_core <- function(do_path, asc_path, output_dir) {
+load_nis_core <- function(do_path, asc_path, output_direct) {
 
   requireNamespace("data.table", quietly = TRUE)
   requireNamespace("readr", quietly = TRUE)
   requireNamespace("fst", quietly = TRUE)
   requireNamespace("stringr", quietly = TRUE)
 
-  setwd(output_dir)
+  setwd(output_direct)
 
   # --- Load the .Do file ---
   do_lines <- readLines(do_path)

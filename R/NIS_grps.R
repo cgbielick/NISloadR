@@ -8,7 +8,7 @@
 #'
 #' @param do_path Character. The file path to the Stata .Do file for the DX PR GRPS dataset.
 #' @param asc_path Character. The file path to the fixed-width ASCII (.ASC) file.
-#' @param output_dir Character. The working directory where the output fst file will be saved.
+#' @param output_direct Character. The working directory where the output fst file will be saved.
 #'
 #' @return A list with three elements:
 #'   \item{schema}{A data.table containing the variable schema with columns \code{type},
@@ -21,11 +21,11 @@
 #' @examples
 #' \dontrun{
 #'   nis_dx_pr_grps <- load_nis_dx_pr_grps(
-#'         do_path = "path/to/Stataload_NIS_2022_DX_PR_GRPS.Do",
-#'         asc_path = "path/to/NIS_2022_DX_PR_GRPS.ASC",
-#'         output_dir = "your/output/directory")
+#'           do_path = "~/project/STATA load programs/StataLoad_NIS_2021_DX_PR_GRPS.Do",
+#'           asc_path = "~/project/data/ASCII/NIS_2021_DX_PR_GRPS.ASC",
+#'           output_direct = "~/project/data")
 #' }
-load_nis_dx_pr_grps <- function(do_path, asc_path, output_dir) {
+load_nis_dx_pr_grps <- function(do_path, asc_path, output_direct) {
   # Load required packages
   requireNamespace("data.table", quietly = TRUE)
   requireNamespace("readr", quietly = TRUE)
@@ -33,7 +33,7 @@ load_nis_dx_pr_grps <- function(do_path, asc_path, output_dir) {
   requireNamespace("stringr", quietly = TRUE)
 
   # Set working directory
-  setwd(output_dir)
+  setwd(output_direct)
 
   # --- Load the .Do file ---
   do_lines <- readLines(do_path)
