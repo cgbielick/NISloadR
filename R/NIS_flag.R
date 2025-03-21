@@ -176,7 +176,21 @@ flag_nis <- function(fst_dir,
     }
     # For years <= 2011, enforce DISCWT data presence unless overridden by old_weights = 1
     if (current_year <= 2011 && old_weights == 0) {
-      if (is.null(discwt_data) || !(current_year %in% unique(discwt_data$YEAR))) {
+      # Automatically load DISCWT data if not provided
+      if (is.null(discwt_data)) {
+        weights_file <- file.path(weights_dir, paste0("NIS_", current_year, "_HOSPITAL_TrendWt.ASC"))
+        if (!file.exists(weights_file)) {
+          stop("DISCWT file for year ", current_year, " not found in weights_dir: ", weights_file)
+        }
+        discwt_data <- readr::read_csv(weights_file, col_names = FALSE, trim_ws = FALSE) %>%
+          dplyr::mutate(
+            YEAR = as.numeric(substr(X1, 1, 4)),
+            HOSPID_final = as.numeric(substr(X1, 5, 9)),
+            DISCWT = as.numeric(substr(X1, 11, 19))
+          ) %>%
+          dplyr::select(-X1)
+      }
+      if (!(current_year %in% unique(discwt_data$YEAR))) {
         stop("For year ", current_year, ", DISCWT data for altered weights must be provided.")
       }
       message("Merging DISCWT data for year ", current_year, ".")
@@ -184,6 +198,7 @@ flag_nis <- function(fst_dir,
       df <- dplyr::left_join(df, discwt_data, by = c("YEAR", "HOSPID_final"))
       df$DISCWT <- as.numeric(df$DISCWT)
     }
+
     message("Data for year ", current_year, " loaded with ", nrow(df), " rows.")
     return(df)
   }
