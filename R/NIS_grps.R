@@ -25,6 +25,7 @@
 #'           asc_path = "~/project/data/ASCII/NIS_2021_DX_PR_GRPS.ASC",
 #'           output_direct = "~/project/data")
 #' }
+
 load_nis_dx_pr_grps <- function(do_path, asc_path, output_direct) {
   # Load required packages
   requireNamespace("data.table", quietly = TRUE)
