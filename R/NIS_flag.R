@@ -254,15 +254,12 @@ flag_nis <- function(fst_dir,
     return(df_chunk)
   }
 
-  <<<<<<< HEAD
-
   # ---------------------------------------------------------------------------
   # Helper Function: Read Data for a Given Year (with special handling for 2015
   # and DISCWT merging for years ≤ 2011)
   # ---------------------------------------------------------------------------
-  =======
-    # Read data for a given year with filtering and DISCWT merging for years <= 2011
-    >>>>>>> dd88a150a2a9bc4606ab1461dd7522c5cf9e4edf
+  # Read data for a given year with filtering and DISCWT merging for years <= 2011
+
   read_year_data <- function(current_year, fst_dir, import_cols, rename_mapping,
                              old_weights, weights_dir, discwt_data, adult) {
     message("Loading data for year ", current_year, ".")
