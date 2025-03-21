@@ -367,45 +367,54 @@ flag_nis <- function(fst_dir,
       cl <- makeCluster(num_cores)
       registerDoParallel(cl)
 
+      # Flagging diagnosis codes in each chunk
       flagged_chunks <- foreach(chunk = df_chunks,
                                 .packages = c("data.table", "dplyr"),
                                 .export = c("flag_codes")) %dopar% {
-                                  # Flag diagnosis codes if provided
+                                  # Flag ICD-9 codes and store results in temporary columns with suffix _9
                                   if (!is.null(dx_codes_9)) {
                                     for (flag in names(dx_codes_9)) {
-                                      # Create a one-element list with the flag name preserved.
                                       chunk <- flag_codes(chunk, dx9_cols,
-                                                          setNames(list(dx_codes_9[[flag]]),
-                                                                   flag),
+                                                          setNames(list(dx_codes_9[[flag]]), paste0(flag, "_9")),
                                                           flag_type, current_year)
                                     }
                                   }
 
-                                  # And similarly for ICD-10 codes:
+                                  # Flag ICD-10 codes and store results in temporary columns with suffix _10
                                   if (!is.null(dx_codes_10)) {
                                     for (flag in names(dx_codes_10)) {
                                       chunk <- flag_codes(chunk, dx10_cols,
-                                                          setNames(list(dx_codes_10[[flag]]),
-                                                                   flag),
+                                                          setNames(list(dx_codes_10[[flag]]), paste0(flag, "_10")),
                                                           flag_type, current_year)
                                     }
                                   }
 
-                                  # Flag procedure codes if provided
-                                  if (length(pr_list) > 0) {
-                                    if ("pr9" %in% names(pr_list)) {
-                                      chunk <- flag_codes(chunk, pr9_cols,
-                                                          list(pr9 = pr_list[["pr9"]]),
-                                                          flag_type)
-                                    }
-                                    if ("pr10" %in% names(pr_list)) {
-                                      chunk <- flag_codes(chunk, pr10_cols,
-                                                          list(pr10 = pr_list[["pr10"]]),
-                                                          flag_type)
+                                  # For 2015, combine the flags from ICD-9 and ICD-10 into one final flag column.
+                                  if (current_year == 2015) {
+                                    for (flag in union(names(dx_codes_9), names(dx_codes_10))) {
+                                      col9 <- paste0(flag, "_9")
+                                      col10 <- paste0(flag, "_10")
+                                      if (col9 %in% names(chunk) && col10 %in% names(chunk)) {
+                                        # Combine using OR: if either flag is 1 then the final flag is 1.
+                                        chunk[[flag]] <- as.integer(chunk[[col9]] == 1 | chunk[[col10]] == 1)
+                                        # Remove the temporary columns
+                                        chunk[[col9]] <- NULL
+                                        chunk[[col10]] <- NULL
+                                      } else if (col9 %in% names(chunk)) {
+                                        chunk[[flag]] <- chunk[[col9]]
+                                        chunk[[col9]] <- NULL
+                                      } else if (col10 %in% names(chunk)) {
+                                        chunk[[flag]] <- chunk[[col10]]
+                                        chunk[[col10]] <- NULL
+                                      }
                                     }
                                   }
+
+                                  # For other years, the flag will be set by whichever set of columns is available.
+
                                   chunk
                                 }
+
       stopCluster(cl)
 
       processed_data <- bind_rows(flagged_chunks)
