@@ -25,8 +25,9 @@ flag_nis <- function(fst_dir,
                      dry_run = FALSE,              # If TRUE, do not write output files
                      num_cores = max(1, parallel::detectCores() - 1),
                      icd_version = "both",         # "9", "10", or "both"
-                     import_cols = c("AGE", "HOSP_NIS", "KEY_NIS", "FEMALE", "HOSPID", "KEY",
-                                     "PL_NCHS", "NIS_STRATUM", "RACE", "YEAR", "ZIPINC_QRTL", "DIED",
+                     import_cols = c("AGE", "HOSP_NIS", "KEY_NIS", "FEMALE",
+                                     "HOSPID", "KEY", "PL_NCHS", "NIS_STRATUM",
+                                     "RACE", "YEAR", "ZIPINC_QRTL", "DIED",
                                      "DISCWT", "PAY1",
                                      paste0("DX", 1:25), paste0("I10_DX", 1:25),
                                      paste0("PR", 1:25), paste0("I10_PR", 1:25)),
@@ -146,22 +147,22 @@ flag_nis <- function(fst_dir,
     # REGION & URBAN processing via NIS_STRATUM
     if ("NIS_STRATUM" %in% names(df)) {
       df[, ns := as.character(NIS_STRATUM)]
-      df[, is_2011 := (YEAR == 2011)]
-      df[, is_2012_2018 := between(YEAR, 2012, 2018)]
+      df[, is_2011minus := (YEAR <= 2011)]
+      df[, is_2012plus := (YEAR >= 2012)]
       df[, REGION_num := fcase(
-        is_2011 & startsWith(ns, "1"), 1L,
-        is_2011 & startsWith(ns, "2"), 2L,
-        is_2011 & startsWith(ns, "3"), 3L,
-        is_2011 & startsWith(ns, "4"), 4L,
-        is_2012_2018 & startsWith(ns, "1"), 1L,
-        is_2012_2018 & startsWith(ns, "2"), 1L,
-        is_2012_2018 & startsWith(ns, "3"), 2L,
-        is_2012_2018 & startsWith(ns, "4"), 2L,
-        is_2012_2018 & startsWith(ns, "5"), 3L,
-        is_2012_2018 & startsWith(ns, "6"), 3L,
-        is_2012_2018 & startsWith(ns, "7"), 3L,
-        is_2012_2018 & startsWith(ns, "8"), 4L,
-        is_2012_2018 & startsWith(ns, "9"), 4L,
+        is_2011minus & startsWith(ns, "1"), 1L,
+        is_2011minus & startsWith(ns, "2"), 2L,
+        is_2011minus & startsWith(ns, "3"), 3L,
+        is_2011minus & startsWith(ns, "4"), 4L,
+        is_2012plus & startsWith(ns, "1"), 1L,
+        is_2012plus & startsWith(ns, "2"), 1L,
+        is_2012plus & startsWith(ns, "3"), 2L,
+        is_2012plus & startsWith(ns, "4"), 2L,
+        is_2012plus & startsWith(ns, "5"), 3L,
+        is_2012plus & startsWith(ns, "6"), 3L,
+        is_2012plus & startsWith(ns, "7"), 3L,
+        is_2012plus & startsWith(ns, "8"), 4L,
+        is_2012plus & startsWith(ns, "9"), 4L,
         default = NA_integer_
       )]
       df[, REGION := factor(REGION_num, levels = c(1L, 2L, 3L, 4L),
@@ -344,6 +345,8 @@ flag_nis <- function(fst_dir,
       total_rows <- nrow(full_data)
       chunk_size <- ceiling(total_rows / num_cores)
       df_chunks <- split(full_data, ceiling(seq_len(total_rows) / chunk_size))
+
+      message("Starting ICD code flagging for year ", current_year, ".")
 
       cl <- makeCluster(num_cores)
       registerDoParallel(cl)
